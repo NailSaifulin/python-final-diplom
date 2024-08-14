@@ -12,6 +12,7 @@ class User(AbstractUser):
     email = models.EmailField(unique=True, verbose_name='почта')
     company = models.CharField(verbose_name='Компания', max_length=40, blank=True)
     position = models.CharField(verbose_name='Должность', max_length=40, blank=True)
+    key = models.CharField(verbose_name='Токен', max_length=64, unique=True)
     # username_validator = UnicodeUsernameValidator()
     username = models.CharField(
         max_length=150,

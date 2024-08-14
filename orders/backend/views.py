@@ -5,6 +5,10 @@ from django.contrib.auth import authenticate
 from django.http import JsonResponse
 from .serializers import UserSerializer
 from rest_framework.authtoken.models import Token
+from django.core.signing import BadSignature, Signer
+from django.shortcuts import get_object_or_404
+from .models import User
+from .signals import user_registered
 
 
 class RegisterAccount(APIView):
@@ -22,7 +26,7 @@ class RegisterAccount(APIView):
                 user = user_serializer.save()
                 user.set_password(request.data['password'])
                 user.save()
-
+                user_registered.send(RegisterAccount, user=user)
                 return JsonResponse({'Status': True})
             else:
                 return JsonResponse({'Status': False, 'Errors': user_serializer.errors})
@@ -46,3 +50,19 @@ class LoginAccount(APIView):
             return JsonResponse({'Status': False, 'Errors': 'Не удалось авторизовать'})
 
         return JsonResponse({'Status': False, 'Errors': 'Не указаны все необходимые аргументы'})
+
+
+def user_activate(request, sign):
+    signer = Signer()
+    try:
+        username = signer.unsign(sign)
+    except BadSignature:
+        return render(request, 'main/bad_signature.html')
+    user = get_object_or_404(User, first_name=username)
+    if user.is_active:
+        template = 'main/user_is_activated.html'
+    else:
+        template = 'main/activation_done.html'
+        user.is_active = True
+        user.save()
+    return render(request, template)

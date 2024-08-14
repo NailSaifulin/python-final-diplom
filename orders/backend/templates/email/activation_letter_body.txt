@@ -1,0 +1,5 @@
+Уважаемый пользователь {{ user.first_name }}
+
+Выполните активацию перейдя по ссылке
+
+{{ host }}{% url 'backend:register-activate' sign=sign %}
